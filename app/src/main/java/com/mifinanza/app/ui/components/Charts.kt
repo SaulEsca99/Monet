@@ -242,107 +242,147 @@ fun CategoryBar(
 
 @Composable
 fun MonthlyBarChart(
-    months: List<Pair<String, Pair<Double, Double>>>, // ym to (income, expense)
+    months: List<Pair<String, Pair<Double, Double>>>, // ym → (income, expense)
     modifier: Modifier = Modifier
 ) {
+    val currentYM = remember { com.mifinanza.app.data.currentYearMonth() }
+    val currentIdx = remember(months) { months.indexOfFirst { it.first == currentYM }.takeIf { it >= 0 } ?: (months.size - 1) }
+    var selectedIdx by remember { mutableIntStateOf(currentIdx) }
+
     val maxVal = remember(months) {
         months.maxOfOrNull { maxOf(it.second.first, it.second.second) }.takeIf { it != null && it > 0 } ?: 1.0
     }
-    var selectedIdx by remember { mutableIntStateOf(-1) }
+
+    // Tooltip data — always shows selected (defaults to current month)
+    val (selYM, selData) = months.getOrNull(selectedIdx) ?: return
+    val (selInc, selExp) = selData
+    val selBalance = selInc - selExp
 
     Column(modifier = modifier.fillMaxWidth()) {
-        // Chart bars
-        Row(
-            modifier = Modifier.fillMaxWidth().height(80.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            months.forEachIndexed { idx, (ym, data) ->
-                val (inc, exp) = data
-                val incPct by animateFloatAsState((inc / maxVal).toFloat().coerceIn(0f, 1f), tween(700, idx * 80, EaseOutCubic), label = "i$idx")
-                val expPct by animateFloatAsState((exp / maxVal).toFloat().coerceIn(0f, 1f), tween(700, idx * 80 + 40, EaseOutCubic), label = "e$idx")
-                val selected = selectedIdx == idx
 
-                Column(
-                    modifier = Modifier.weight(1f).fillMaxHeight().clickable { selectedIdx = if (selected) -1 else idx },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Bottom
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 3.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        // Income bar
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(incPct.coerceAtLeast(0.04f))
-                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                .background(if (inc > 0) Color(0xFF10B981).copy(if (selected) 1f else .75f) else Color(0x1510B981))
-                        )
-                        Spacer(Modifier.width(2.dp))
-                        // Expense bar
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(expPct.coerceAtLeast(0.04f))
-                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                .background(if (exp > 0) Color(0xFFEF4444).copy(if (selected) 1f else .75f) else Color(0x15EF4444))
+        // ── Always-visible tooltip ────────────────────────────────────────────
+        val monthName = try {
+            val p = selYM.split("-")
+            val cal = java.util.Calendar.getInstance().apply { set(p[0].toInt(), p[1].toInt()-1, 1) }
+            java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale("es","MX")).format(cal.time).replaceFirstChar { it.uppercase() }
+        } catch (e: Exception) { selYM }
+
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        monthName,
+                        fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                        color = if (selectedIdx == currentIdx) GreenBrand else MaterialTheme.colorScheme.onSurface
+                    )
+                    if (selectedIdx == currentIdx) {
+                        Surface(shape = RoundedCornerShape(50), color = GreenBrand.copy(.15f)) {
+                            Text("Este mes", modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), fontSize = 9.sp, color = GreenBrand, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("INGRESOS", fontSize = 8.sp, color = Color(0xFF10B981).copy(.7f), fontWeight = FontWeight.Bold)
+                        Text(formatMXN(selInc), fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF10B981))
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("GASTOS", fontSize = 8.sp, color = Color(0xFFEF4444).copy(.7f), fontWeight = FontWeight.Bold)
+                        Text(formatMXN(selExp), fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFEF4444))
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("BALANCE", fontSize = 8.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+                        Text(
+                            formatMXN(selBalance), fontSize = 13.sp, fontWeight = FontWeight.ExtraBold,
+                            color = if (selBalance >= 0) Color(0xFF10B981) else Color(0xFFEF4444)
                         )
                     }
                 }
             }
         }
 
-        // Month labels
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            months.forEachIndexed { idx, (ym, _) ->
-                val label = try {
-                    val p = ym.split("-")
-                    val cal = java.util.Calendar.getInstance()
-                    cal.set(p[0].toInt(), p[1].toInt() - 1, 1)
-                    java.text.SimpleDateFormat("MMM", java.util.Locale("es", "MX")).format(cal.time)
-                } catch (e: Exception) { ym.takeLast(2) }
-                Text(
-                    label.replaceFirstChar { it.uppercase() },
-                    modifier = Modifier.weight(1f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    fontSize = 9.sp,
-                    color = if (selectedIdx == idx) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = if (selectedIdx == idx) FontWeight.Bold else FontWeight.Normal
-                )
-            }
-        }
+        Spacer(Modifier.height(10.dp))
 
-        // Tooltip for selected month
-        if (selectedIdx >= 0 && selectedIdx < months.size) {
-            val (ym, data) = months[selectedIdx]
-            val (inc, exp) = data
-            androidx.compose.animation.AnimatedVisibility(visible = true, enter = fadeIn() + expandVertically()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp).clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant).padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
+        // ── Bars ──────────────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth().height(90.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            months.forEachIndexed { idx, (ym, data) ->
+                val (inc, exp) = data
+                val isCurrent = ym == currentYM
+                val isSelected = selectedIdx == idx
+                val incPct by animateFloatAsState((inc / maxVal).toFloat().coerceIn(0f, 1f), tween(700, idx * 60, EaseOutCubic), label = "i$idx")
+                val expPct by animateFloatAsState((exp / maxVal).toFloat().coerceIn(0f, 1f), tween(700, idx * 60 + 30, EaseOutCubic), label = "e$idx")
+
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxHeight().clickable { selectedIdx = idx },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom
                 ) {
-                    Text("↑ ${formatMXN(inc)}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
-                    Text("↓ ${formatMXN(exp)}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
-                    val balance = inc - exp
-                    Text("= ${formatMXN(balance)}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (balance >= 0) Color(0xFF10B981) else Color(0xFFEF4444))
+                    // Dot indicator for current/selected
+                    if (isSelected) {
+                        Box(Modifier.size(5.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(if (isCurrent) GreenBrand else MaterialTheme.colorScheme.onSurfaceVariant))
+                        Spacer(Modifier.height(3.dp))
+                    } else {
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        val alpha = if (!isSelected && selectedIdx != -1) .45f else if (isCurrent) 1f else .8f
+                        Box(Modifier.weight(1f).fillMaxHeight(incPct.coerceAtLeast(0.03f))
+                            .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
+                            .background(if (inc > 0) Color(0xFF10B981).copy(alpha) else Color(0x0F10B981)))
+                        Spacer(Modifier.width(2.dp))
+                        Box(Modifier.weight(1f).fillMaxHeight(expPct.coerceAtLeast(0.03f))
+                            .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
+                            .background(if (exp > 0) Color(0xFFEF4444).copy(alpha) else Color(0x0FEF4444)))
+                    }
                 }
             }
         }
 
+        // Month labels
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            months.forEachIndexed { idx, (ym, _) ->
+                val label = try {
+                    val p = ym.split("-")
+                    val cal = java.util.Calendar.getInstance().apply { set(p[0].toInt(), p[1].toInt()-1, 1) }
+                    java.text.SimpleDateFormat("MMM", java.util.Locale("es","MX")).format(cal.time).replaceFirstChar { it.uppercase() }
+                } catch (e: Exception) { ym.takeLast(2) }
+                Text(
+                    label, modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center, fontSize = 9.sp,
+                    color = when {
+                        ym == currentYM -> GreenBrand
+                        selectedIdx == idx -> MaterialTheme.colorScheme.onSurface
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    fontWeight = if (ym == currentYM || selectedIdx == idx) FontWeight.Bold else FontWeight.Normal
+                )
+            }
+        }
+
         // Legend
-        Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center) {
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.Center) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFF10B981)))
+                Box(Modifier.size(7.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFF10B981)))
                 Spacer(Modifier.width(3.dp))
                 Text("Ingresos", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFEF4444)))
+                Box(Modifier.size(7.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFEF4444)))
                 Spacer(Modifier.width(3.dp))
                 Text("Gastos", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
