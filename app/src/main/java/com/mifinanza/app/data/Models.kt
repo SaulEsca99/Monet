@@ -7,7 +7,7 @@ import java.util.*
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-// Locale fijo para que las fechas sean consistentes en cualquier dispositivo
+// Locale fijo — fechas consistentes en cualquier dispositivo
 private val ISO_DATE   = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 private val ISO_MONTH  = SimpleDateFormat("yyyy-MM",    Locale.US)
 private val ES_DISPLAY = Locale("es", "MX")
@@ -28,52 +28,60 @@ fun monthLabel(ym: String): String {
     } catch (e: Exception) { ym }
 }
 
-// Días hasta el próximo cobro en el MES ACTUAL o siguiente si ya pasó
+// Medianoche de hoy — base para todos los cálculos de días
+private fun todayMidnight(): Calendar = Calendar.getInstance().apply {
+    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 0);      set(Calendar.MILLISECOND, 0)
+}
+
+// Días hasta el próximo cobro (mes actual si aún no ha pasado, si no mes siguiente)
 fun daysUntilDay(day: Int): Int {
-    val now = Calendar.getInstance()
-    val target = Calendar.getInstance().apply {
-        val maxDay = getActualMaximum(Calendar.DAY_OF_MONTH)
-        set(Calendar.DAY_OF_MONTH, day.coerceIn(1, maxDay))
-        // Si el día ya pasó o es hoy, mover al mes siguiente
-        if (get(Calendar.DAY_OF_MONTH) <= now.get(Calendar.DAY_OF_MONTH)) {
+    val today = todayMidnight()
+    val target = todayMidnight().apply {
+        set(Calendar.DAY_OF_MONTH, day.coerceIn(1, getActualMaximum(Calendar.DAY_OF_MONTH)))
+        // Si el día ya pasó (o es hoy y queremos el próximo), mover al mes siguiente
+        if (get(Calendar.DAY_OF_MONTH) < today.get(Calendar.DAY_OF_MONTH)) {
             add(Calendar.MONTH, 1)
             set(Calendar.DAY_OF_MONTH, day.coerceIn(1, getActualMaximum(Calendar.DAY_OF_MONTH)))
         }
     }
-    return ((target.timeInMillis - now.timeInMillis) / 86400000).toInt().coerceAtLeast(0)
+    return ((target.timeInMillis - today.timeInMillis) / 86400000).toInt().coerceAtLeast(0)
 }
 
 // Siempre cuenta al MES SIGUIENTE (cuando ya pagaste este mes)
 fun daysUntilNextMonthDay(day: Int): Int {
-    val now = Calendar.getInstance()
-    val target = Calendar.getInstance().apply {
+    val today = todayMidnight()
+    val target = todayMidnight().apply {
         add(Calendar.MONTH, 1)
         set(Calendar.DAY_OF_MONTH, day.coerceIn(1, getActualMaximum(Calendar.DAY_OF_MONTH)))
     }
-    return ((target.timeInMillis - now.timeInMillis) / 86400000).toInt().coerceAtLeast(1)
+    return ((target.timeInMillis - today.timeInMillis) / 86400000).toInt().coerceAtLeast(1)
+}
+
+// Días hasta una fecha específica "yyyy-MM-dd" — comparación por día, sin hora
+fun daysUntilDate(dateStr: String): Int {
+    return try {
+        val target = todayMidnight().apply { time = ISO_DATE.parse(dateStr)!!
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0);      set(Calendar.MILLISECOND, 0)
+        }
+        val today = todayMidnight()
+        ((target.timeInMillis - today.timeInMillis) / 86400000).toInt()
+    } catch (e: Exception) { 0 }
 }
 
 // Etiqueta "22 Oct" para el próximo mes
 fun nextMonthLabel(day: Int): String {
     val cal = Calendar.getInstance().apply { add(Calendar.MONTH, 1) }
     val month = SimpleDateFormat("MMM", ES_DISPLAY).format(cal.time).replaceFirstChar { it.uppercase() }
-    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-    return "${day.coerceIn(1, maxDay)} $month"
+    return "${day.coerceIn(1, cal.getActualMaximum(Calendar.DAY_OF_MONTH))} $month"
 }
 
 // Etiqueta "22 Sep" para el mes actual
 fun currentMonthLabel(day: Int): String {
     val cal = Calendar.getInstance()
     val month = SimpleDateFormat("MMM", ES_DISPLAY).format(cal.time).replaceFirstChar { it.uppercase() }
-    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-    return "${day.coerceIn(1, maxDay)} $month"
-}
-
-fun daysUntilDate(dateStr: String): Int {
-    return try {
-        val target = ISO_DATE.parse(dateStr) ?: return 0
-        ((target.time - Date().time) / 86400000).toInt()
-    } catch (e: Exception) { 0 }
+    return "${day.coerceIn(1, cal.getActualMaximum(Calendar.DAY_OF_MONTH))} $month"
 }
 
 fun formatDate(dateStr: String): String {
