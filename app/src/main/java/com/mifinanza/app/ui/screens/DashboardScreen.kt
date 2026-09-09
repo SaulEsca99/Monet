@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.BorderStroke
@@ -218,8 +219,8 @@ fun DashboardScreen(vm: AppViewModel) {
     var selWeekDay by remember { mutableStateOf(todayDowIdx) }
     val weekDayNames = listOf("Lun","Mar","Mié","Jue","Vie","Sáb","Dom")
 
-    Column(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(bottom=24.dp)) {
-
+    LazyColumn(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom=24.dp)) {
+        item {
         // ── HERO CARD — Balance (header handled by Navigation TopBar) ─────────
         Box(modifier = Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF0F1926), Color(0xFF132030)))).padding(horizontal=20.dp, vertical=20.dp)) {
             Column {
@@ -573,6 +574,7 @@ fun DashboardScreen(vm: AppViewModel) {
         }
 
         if (state.accounts.isEmpty()) EmptyState("🚀","¡Bienvenido a Monet!","Toca la 👜 para crear tu primera cuenta")
+        } // end item
     }
 }
 
