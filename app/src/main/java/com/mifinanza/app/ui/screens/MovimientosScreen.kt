@@ -167,9 +167,9 @@ fun MovimientosScreen(vm: AppViewModel) {
             } else {
                 Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     filtered.forEach { tx ->
+                        key(tx.id) {  // key evita que dismissState se reutilice tras borrar
                         val acc = state.accounts.find { it.id == tx.accountId }
                         val meta = getCategoryMeta(tx.category)
-                        // SWIPE TO DELETE — proper pattern: LaunchedEffect waits for animation then deletes
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { v -> v == SwipeToDismissBoxValue.EndToStart },
                             positionalThreshold = { it * .45f }
@@ -208,6 +208,7 @@ fun MovimientosScreen(vm: AppViewModel) {
                             }
                         }
                         } // end SwipeToDismissBox
+                        } // end key(tx.id)
                     }
                     Spacer(Modifier.height(80.dp))
                 }

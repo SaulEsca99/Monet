@@ -206,7 +206,7 @@ fun DashboardScreen(vm: AppViewModel) {
         if (dow == Calendar.SUNDAY) 6 else dow - Calendar.MONDAY
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(bottom=24.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(bottom=24.dp)) {
 
         // ── HERO CARD — Balance (header handled by Navigation TopBar) ─────────
         Box(modifier = Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF0F1926), Color(0xFF132030)))).padding(horizontal=20.dp, vertical=20.dp)) {

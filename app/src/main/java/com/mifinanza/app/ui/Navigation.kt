@@ -51,8 +51,19 @@ fun greeting(): String {
 @Composable
 fun AppNavigation(vm: AppViewModel = viewModel()) {
     val state by vm.state.collectAsState()
+    // isLoaded evita el flash de WelcomeScreen antes de que DataStore cargue
+    var isLoaded by remember { mutableStateOf(false) }
+    LaunchedEffect(state) { isLoaded = true }
 
-    if (state.accounts.isEmpty()) {
+    if (!isLoaded) {
+        // Splash mientras carga DataStore
+        Box(modifier = androidx.compose.ui.Modifier.fillMaxSize()
+            .background(androidx.compose.ui.graphics.Color(0xFF0F1926)),
+            contentAlignment = androidx.compose.ui.Alignment.Center) {}
+        return
+    }
+
+    if (state.accounts.isEmpty() && state.userName.isEmpty()) {
         WelcomeScreen(vm = vm)
         return
     }
