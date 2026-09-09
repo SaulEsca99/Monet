@@ -330,39 +330,56 @@ fun DashboardScreen(vm: AppViewModel) {
 
         // ── HOY ──────────────────────────────────────────────────────────────
         Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
-            Column(modifier=Modifier.padding(16.dp), verticalArrangement=Arrangement.spacedBy(10.dp)) {
+            Column(modifier=Modifier.padding(16.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                // Header
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
                     Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                         Box(Modifier.size(8.dp).clip(CircleShape).background(GreenBrand))
                         Text("HOY", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text(SimpleDateFormat("d 'de' MMMM", Locale("es","MX")).format(Calendar.getInstance().time).replaceFirstChar{it.uppercase()}, style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(SimpleDateFormat("EEEE d 'de' MMMM", Locale("es","MX")).format(Calendar.getInstance().time).replaceFirstChar{it.uppercase()}, style=MaterialTheme.typography.bodySmall, color=GreenBrand, fontWeight=FontWeight.SemiBold)
                 }
-                if (todayTxs.isEmpty()) {
-                    Text("Sin movimientos hoy", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
-                } else {
-                    Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                        if (todayInc>0) Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFF10B981).copy(.08f)) {
-                            Column(modifier=Modifier.padding(12.dp)) {
+                // Totals — always visible
+                Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                    Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFF10B981).copy(if(todayInc>0) .1f else .04f)) {
+                        Column(modifier=Modifier.padding(12.dp)) {
+                            Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Default.TrendingUp, null, tint=Color(0xFF10B981), modifier=Modifier.size(13.dp))
                                 Text("INGRESOS", style=MaterialTheme.typography.labelSmall, color=Color(0xFF10B981).copy(.7f))
-                                Text(formatMXN(todayInc), fontWeight=FontWeight.ExtraBold, fontSize=16.sp, color=Color(0xFF10B981))
                             }
-                        }
-                        if (todayExp>0) Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFFEF4444).copy(.08f)) {
-                            Column(modifier=Modifier.padding(12.dp)) {
-                                Text("GASTOS", style=MaterialTheme.typography.labelSmall, color=Color(0xFFEF4444).copy(.7f))
-                                Text(formatMXN(todayExp), fontWeight=FontWeight.ExtraBold, fontSize=16.sp, color=Color(0xFFEF4444))
-                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(formatMXN(todayInc), fontWeight=FontWeight.ExtraBold, fontSize=15.sp, color=if(todayInc>0) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                    // Last 3 transactions today
-                    Column(verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                        todayTxs.take(3).forEach { tx ->
-                            val meta = getCategoryMeta(tx.category)
-                            Row(modifier=Modifier.fillMaxWidth(), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                                Box(Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(categoryColor(tx.category).copy(.12f)), contentAlignment=Alignment.Center) { Text(meta.emoji, fontSize=14.sp) }
-                                Text(tx.description, modifier=Modifier.weight(1f), style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurface, fontWeight=FontWeight.Medium)
-                                Text("${if(tx.type=="income")"+" else "−"}${formatMXN(tx.amount)}", fontWeight=FontWeight.Bold, fontSize=13.sp, color=if(tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444))
+                    Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFFEF4444).copy(if(todayExp>0) .1f else .04f)) {
+                        Column(modifier=Modifier.padding(12.dp)) {
+                            Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Default.TrendingDown, null, tint=Color(0xFFEF4444), modifier=Modifier.size(13.dp))
+                                Text("GASTOS", style=MaterialTheme.typography.labelSmall, color=Color(0xFFEF4444).copy(.7f))
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(formatMXN(todayExp), fontWeight=FontWeight.ExtraBold, fontSize=15.sp, color=if(todayExp>0) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                // Transactions today
+                if (todayTxs.isEmpty()) {
+                    Box(modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(14.dp), contentAlignment=Alignment.Center) {
+                        Text("Sin movimientos registrados hoy", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else {
+                    Surface(shape=RoundedCornerShape(14.dp), color=MaterialTheme.colorScheme.surfaceVariant) {
+                        Column(modifier=Modifier.fillMaxWidth().padding(8.dp), verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                            todayTxs.take(4).forEach { tx ->
+                                val meta = getCategoryMeta(tx.category)
+                                Row(modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surface).padding(10.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                                    Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(categoryColor(tx.category).copy(.15f)), contentAlignment=Alignment.Center) { Text(meta.emoji, fontSize=16.sp) }
+                                    Column(Modifier.weight(1f)) {
+                                        Text(tx.description, style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurface, fontWeight=FontWeight.SemiBold)
+                                        Text(meta.name, fontSize=10.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Text("${if(tx.type=="income")"+" else "−"}${formatMXN(tx.amount)}", fontWeight=FontWeight.ExtraBold, fontSize=14.sp, color=if(tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444))
+                                }
                             }
                         }
                     }
@@ -376,9 +393,82 @@ fun DashboardScreen(vm: AppViewModel) {
                 Row(modifier=Modifier.fillMaxWidth().padding(bottom=10.dp), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
                     Text("ESTA SEMANA", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                     val weekExp = weekDays.sumOf { it.third }
-                    if (weekExp > 0) Text(formatMXN(weekExp), style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
+                    val weekInc = weekDays.sumOf { it.second }
+                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        if (weekInc>0) Text("↑${formatMXN(weekInc)}", style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.Bold, color=Color(0xFF10B981))
+                        if (weekExp>0) Text("↓${formatMXN(weekExp)}", style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
+                        if (weekInc==0.0 && weekExp==0.0) Text("Sin datos aún", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
                 WeeklyBarChart(days=weekDays, todayIdx=todayDowIdx)
+            }
+        }
+
+        // ── ESTE MES — día a día ──────────────────────────────────────────────
+        val monthDailyData = remember(state.transactions, ym) {
+            val cal = Calendar.getInstance()
+            val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+            val today2 = cal.get(Calendar.DAY_OF_MONTH)
+            (1..minOf(daysInMonth, today2)).map { day ->
+                val ds = String.format("%s-%02d", ym, day)
+                val txs = state.transactions.filter { it.date == ds }
+                Triple(day, txs.filter{it.type=="income"}.sumOf{it.amount}, txs.filter{it.type=="expense"}.sumOf{it.amount})
+            }
+        }
+        val monthMaxVal = remember(monthDailyData) { monthDailyData.maxOfOrNull { maxOf(it.second,it.third) }.takeIf{it!=null&&it>0} ?: 1.0 }
+        val todayOfMonth = remember { Calendar.getInstance().get(Calendar.DAY_OF_MONTH) }
+        var selDay by remember { mutableIntStateOf(todayOfMonth - 1) }
+
+        Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
+            Column(modifier=Modifier.padding(16.dp), verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                    Text("ESTE MES", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(SimpleDateFormat("MMMM yyyy", Locale("es","MX")).format(Calendar.getInstance().time).replaceFirstChar{it.uppercase()}, style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                // Tooltip del día seleccionado
+                val selD = monthDailyData.getOrNull(selDay)
+                if (selD != null) {
+                    val (d, dInc, dExp) = selD
+                    Surface(shape=RoundedCornerShape(12.dp), color=MaterialTheme.colorScheme.surfaceVariant, modifier=Modifier.fillMaxWidth()) {
+                        Row(modifier=Modifier.padding(horizontal=14.dp,vertical=10.dp), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                            Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                                Text("Día $d", fontWeight=FontWeight.Bold, fontSize=12.sp, color=if(d==todayOfMonth) GreenBrand else MaterialTheme.colorScheme.onSurface)
+                                if (d==todayOfMonth) Surface(shape=RoundedCornerShape(50), color=GreenBrand.copy(.15f)) { Text("Hoy", modifier=Modifier.padding(horizontal=6.dp,vertical=2.dp), fontSize=9.sp, color=GreenBrand, fontWeight=FontWeight.Bold) }
+                            }
+                            Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                                if (dInc>0) Text("↑${formatMXN(dInc)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFF10B981))
+                                if (dExp>0) Text("↓${formatMXN(dExp)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
+                                if (dInc==0.0 && dExp==0.0) Text("Sin movimientos", fontSize=11.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+                // Barras diarias con scroll horizontal
+                Row(modifier=Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).height(70.dp), horizontalArrangement=Arrangement.spacedBy(3.dp), verticalAlignment=Alignment.Bottom) {
+                    monthDailyData.forEachIndexed { idx, (day, dInc, dExp) ->
+                        val isToday = day == todayOfMonth
+                        val isSel = selDay == idx
+                        val incPct by animateFloatAsState((dInc/monthMaxVal).toFloat().coerceIn(0f,1f), tween(500, idx*15, EaseOutCubic), label="mi$idx")
+                        val expPct by animateFloatAsState((dExp/monthMaxVal).toFloat().coerceIn(0f,1f), tween(500, idx*15+8, EaseOutCubic), label="me$idx")
+                        val alpha = if (!isSel && selDay != -1) .4f else 1f
+                        Column(modifier=Modifier.width(18.dp).fillMaxHeight().clickable{selDay=idx}, horizontalAlignment=Alignment.CenterHorizontally, verticalArrangement=Arrangement.Bottom) {
+                            if (isToday) { Box(Modifier.size(3.dp).clip(CircleShape).background(GreenBrand)); Spacer(Modifier.height(2.dp)) }
+                            Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.Center, verticalAlignment=Alignment.Bottom) {
+                                Box(Modifier.width(6.dp).fillMaxHeight(incPct.coerceAtLeast(0.04f)).clip(RoundedCornerShape(topStart=2.dp,topEnd=2.dp)).background(Color(0xFF10B981).copy(if(dInc>0)alpha else .12f)))
+                                Spacer(Modifier.width(1.dp))
+                                Box(Modifier.width(6.dp).fillMaxHeight(expPct.coerceAtLeast(0.04f)).clip(RoundedCornerShape(topStart=2.dp,topEnd=2.dp)).background(Color(0xFFEF4444).copy(if(dExp>0)alpha else .12f)))
+                            }
+                        }
+                    }
+                }
+                // Day numbers below (every 5)
+                Row(modifier=Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement=Arrangement.spacedBy(3.dp)) {
+                    monthDailyData.forEachIndexed { idx, (day, _, _) ->
+                        Box(modifier=Modifier.width(18.dp), contentAlignment=Alignment.Center) {
+                            if (day % 5 == 0 || day == 1 || day == todayOfMonth) Text("$day", fontSize=7.sp, color=if(day==todayOfMonth) GreenBrand else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight=if(day==todayOfMonth) FontWeight.Bold else FontWeight.Normal)
+                        }
+                    }
+                }
             }
         }
 
