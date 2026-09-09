@@ -212,9 +212,15 @@ private fun MsiPlanCard(plan: MsiPlan, accounts: List<Account>, onConfirm: () ->
         if (accounts.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
             if (paidThisMonth) {
-                // Already paid — only show liquidate
+                // Already paid this month — show liquidate + no-deduct for next month
                 OutlinedButton(onClick = onLiquidate, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant), border = BorderStroke(1.dp, BorderColor), shape = RoundedCornerShape(12.dp)) {
                     Text("Liquidar plan completo", fontSize = 13.sp)
+                }
+                Spacer(Modifier.height(4.dp))
+                TextButton(onClick = onNoDeduct, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.HowToVote, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(.6f))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Ya pagué el mes ${plan.paidMonths + 1} (sin descontar saldo)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(.6f))
                 }
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
