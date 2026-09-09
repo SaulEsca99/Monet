@@ -206,6 +206,18 @@ fun DashboardScreen(vm: AppViewModel) {
         if (dow == Calendar.SUNDAY) 6 else dow - Calendar.MONDAY
     }
 
+    // ── HOY/SEMANA vars — deben estar en scope de función, NO dentro del Column ─
+    val todayLabel = remember(todayStr) {
+        SimpleDateFormat("EEEE d 'de' MMMM", Locale("es","MX"))
+            .format(Calendar.getInstance().time).replaceFirstChar { it.uppercase() }
+    }
+    val weekMax = remember(weekDays) {
+        weekDays.maxOfOrNull { maxOf(it.second, it.third) }.takeIf { it != null && it > 0 } ?: 1.0
+    }
+    val weekTotal = weekDays.sumOf { it.third }
+    var selWeekDay by remember { mutableStateOf(todayDowIdx) }
+    val weekDayNames = listOf("Lun","Mar","Mié","Jue","Vie","Sáb","Dom")
+
     Column(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(bottom=24.dp)) {
 
         // ── HERO CARD — Balance (header handled by Navigation TopBar) ─────────
@@ -331,8 +343,6 @@ fun DashboardScreen(vm: AppViewModel) {
         }
 
         // ── HOY ──────────────────────────────────────────────────────────────
-        val todayLabel = SimpleDateFormat("EEEE d 'de' MMMM", Locale("es","MX"))
-            .format(Calendar.getInstance().time).replaceFirstChar { it.uppercase() }
         Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
             Column(modifier=Modifier.padding(16.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
@@ -381,33 +391,24 @@ fun DashboardScreen(vm: AppViewModel) {
         }
 
         // ── ESTA SEMANA ───────────────────────────────────────────────────────
-        val weekMax = weekDays.maxOfOrNull { maxOf(it.second, it.third) }.takeIf { it != null && it > 0 } ?: 1.0
-        val weekTotal = weekDays.sumOf { it.third }
-        var selWeekDay by remember { mutableStateOf(todayDowIdx) }
-        val weekDayNames = listOf("Lun","Mar","Mié","Jue","Vie","Sáb","Dom")
-        val incColor = Color(0xFF10B981); val expColor = Color(0xFFEF4444)
-        val surfVar = MaterialTheme.colorScheme.surfaceVariant
-        val onSurf = MaterialTheme.colorScheme.onSurface
-        val onSurfVar = MaterialTheme.colorScheme.onSurfaceVariant
-
         Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
             Column(modifier=Modifier.padding(16.dp), verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 // Header
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
-                    Text("ESTA SEMANA", style=MaterialTheme.typography.labelSmall, color=onSurfVar)
-                    if (weekTotal > 0) Text("↓${formatMXN(weekTotal)}", style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.Bold, color=expColor)
-                    else Text("Sin gastos aún", style=MaterialTheme.typography.bodySmall, color=onSurfVar)
+                    Text("ESTA SEMANA", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (weekTotal > 0) Text("↓${formatMXN(weekTotal)}", style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
+                    else Text("Sin gastos aún", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 // Tooltip
                 val sw = weekDays.getOrNull(selWeekDay)
                 if (sw != null) {
-                    Box(modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(surfVar).padding(horizontal=14.dp, vertical=10.dp)) {
+                    Box(modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal=14.dp, vertical=10.dp)) {
                         Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
-                            Text(sw.first, fontWeight=FontWeight.Bold, fontSize=12.sp, color=if(selWeekDay==todayDowIdx) GreenBrand else onSurf)
+                            Text(sw.first, fontWeight=FontWeight.Bold, fontSize=12.sp, color=if(selWeekDay==todayDowIdx) GreenBrand else MaterialTheme.colorScheme.onSurface)
                             Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                                if (sw.second > 0) Text("↑${formatMXN(sw.second)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=incColor)
-                                if (sw.third > 0) Text("↓${formatMXN(sw.third)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=expColor)
-                                if (sw.second == 0.0 && sw.third == 0.0) Text("Sin movimientos", fontSize=11.sp, color=onSurfVar)
+                                if (sw.second > 0) Text("↑${formatMXN(sw.second)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFF10B981))
+                                if (sw.third > 0) Text("↓${formatMXN(sw.third)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
+                                if (sw.second == 0.0 && sw.third == 0.0) Text("Sin movimientos", fontSize=11.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -430,10 +431,10 @@ fun DashboardScreen(vm: AppViewModel) {
                         val barW = slotW * 0.28f
                         // income bar
                         val incH = ((wInc / weekMax).toFloat().coerceIn(0.05f, 1f)) * maxH
-                        drawRoundRect(incColor.copy(if(wInc>0) alpha else .12f), topLeft=androidx.compose.ui.geometry.Offset(cx - barW - 1.dp.toPx(), size.height - incH), size=androidx.compose.ui.geometry.Size(barW, incH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                        drawRoundRect(Color(0xFF10B981).copy(if(wInc>0) alpha else .12f), topLeft=androidx.compose.ui.geometry.Offset(cx - barW - 1.dp.toPx(), size.height - incH), size=androidx.compose.ui.geometry.Size(barW, incH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
                         // expense bar
                         val expH = ((wExp / weekMax).toFloat().coerceIn(0.05f, 1f)) * maxH
-                        drawRoundRect(expColor.copy(if(wExp>0) alpha else .12f), topLeft=androidx.compose.ui.geometry.Offset(cx + 1.dp.toPx(), size.height - expH), size=androidx.compose.ui.geometry.Size(barW, expH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                        drawRoundRect(Color(0xFFEF4444).copy(if(wExp>0) alpha else .12f), topLeft=androidx.compose.ui.geometry.Offset(cx + 1.dp.toPx(), size.height - expH), size=androidx.compose.ui.geometry.Size(barW, expH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
                         // today dot
                         if (isToday) drawCircle(GreenBrand, 3.dp.toPx(), center=androidx.compose.ui.geometry.Offset(cx, 5.dp.toPx()))
                     }
@@ -442,7 +443,7 @@ fun DashboardScreen(vm: AppViewModel) {
                 Row(modifier=Modifier.fillMaxWidth()) {
                     weekDayNames.forEachIndexed { idx, name ->
                         Text(name, modifier=Modifier.weight(1f), textAlign=androidx.compose.ui.text.style.TextAlign.Center, fontSize=9.sp,
-                            color=if(idx==todayDowIdx) GreenBrand else if(idx==selWeekDay) onSurf else onSurfVar,
+                            color=if(idx==todayDowIdx) GreenBrand else if(idx==selWeekDay) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight=if(idx==todayDowIdx||idx==selWeekDay) FontWeight.Bold else FontWeight.Normal)
                     }
                 }

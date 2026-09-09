@@ -4,8 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mifinanza.app.data.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -18,6 +20,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         started = SharingStarted.Eagerly,
         initialValue = AppState()
     )
+
+    // true cuando DataStore ha emitido su primer valor real (evita flash de WelcomeScreen)
+    private val _isDataLoaded = MutableStateFlow(false)
+    val isDataLoaded: StateFlow<Boolean> = _isDataLoaded.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repo.appStateFlow.collect { _isDataLoaded.value = true }
+        }
+    }
 
     private val current get() = state.value
 

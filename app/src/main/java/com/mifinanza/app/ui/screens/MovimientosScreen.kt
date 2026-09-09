@@ -78,7 +78,7 @@ fun MovimientosScreen(vm: AppViewModel) {
             }
         }
     ) { pad ->
-        Column(modifier = Modifier.fillMaxSize().padding(pad).background(MaterialTheme.colorScheme.background)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(pad).background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState())) {
 
             // Summary cards
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -165,7 +165,7 @@ fun MovimientosScreen(vm: AppViewModel) {
             if (filtered.isEmpty()) {
                 EmptyState("💸", "Sin movimientos", "Usa el + o − para registrar")
             } else {
-                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     filtered.forEach { tx ->
                         key(tx.id) {  // key evita que dismissState se reutilice tras borrar
                         val acc = state.accounts.find { it.id == tx.accountId }
