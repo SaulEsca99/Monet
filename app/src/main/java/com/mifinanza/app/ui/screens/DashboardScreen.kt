@@ -173,7 +173,8 @@ fun DashboardScreen(vm: AppViewModel) {
 
     val overdueLoans = remember(state.loans) { state.loans.filter { it.status=="pending" && daysUntilDate(it.expectedReturnDate)<0 } }
     val pendingSubs  = state.subscriptions.filter { it.active && it.lastPaidMonth!=ym }
-    val activeMSI    = state.msiPlans.filter { it.status=="active" }
+    // Solo MSI que NO han sido pagados este mes
+    val unpaidMSI    = state.msiPlans.filter { it.status=="active" && it.payments.none { p -> p.date.startsWith(ym) } }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(bottom=24.dp)) {
 
@@ -337,27 +338,65 @@ fun DashboardScreen(vm: AppViewModel) {
             }
         }
 
-        // ── ALERTS ───────────────────────────────────────────────────────────
-        if (overdueLoans.isNotEmpty() || pendingSubs.isNotEmpty() || activeMSI.isNotEmpty()) {
+        // ── ALERTS — solo muestra lo que falta pagar este mes ────────────────
+        if (overdueLoans.isNotEmpty() || pendingSubs.isNotEmpty() || unpaidMSI.isNotEmpty()) {
             Column(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 Text("PENDIENTE", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant, modifier=Modifier.padding(start=4.dp))
                 if (overdueLoans.isNotEmpty()) AlertRow(Icons.Default.Warning, RedBrand, "${overdueLoans.size} préstamo${if(overdueLoans.size>1)"s" else ""} vencido${if(overdueLoans.size>1)"s" else ""}", "${formatMXN(overdueLoans.sumOf{it.amount})} sin cobrar", urgent=true)
-                if (pendingSubs.isNotEmpty()) AlertRow(Icons.Default.Repeat, PurpleBrand, "${pendingSubs.size} suscripción${if(pendingSubs.size>1)"es" else ""}", formatMXN(subC)+"/mes")
-                if (activeMSI.isNotEmpty()) AlertRow(Icons.Default.Autorenew, BlueBrand, "${activeMSI.size} MSI activo${if(activeMSI.size>1)"s" else ""}", formatMXN(msiC)+"/mes")
+                if (pendingSubs.isNotEmpty()) AlertRow(Icons.Default.Repeat, PurpleBrand, "${pendingSubs.size} suscripción${if(pendingSubs.size>1)"es" else ""} sin pagar", formatMXN(subC)+"/mes")
+                if (unpaidMSI.isNotEmpty()) AlertRow(Icons.Default.Autorenew, BlueBrand, "${unpaidMSI.size} MSI sin pagar este mes", formatMXN(msiC)+"/mes")
             }
         }
 
         // ── LONG-TERM DEBT — Isolated module ─────────────────────────────────
         if (totalMsiDebt>0 || loansPending>0) {
-            Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surfaceVariant, border=BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(.2f))) {
-                Column(modifier=Modifier.padding(16.dp), verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                        Icon(Icons.Default.Schedule, null, tint=MaterialTheme.colorScheme.onSurfaceVariant, modifier=Modifier.size(14.dp))
-                        Text("DEUDAS A FUTURO", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
+                Column(modifier=Modifier.padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    // Header
+                    Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF6366F1).copy(.12f)), contentAlignment=Alignment.Center) {
+                            Icon(Icons.Default.Schedule, null, tint=Color(0xFF6366F1), modifier=Modifier.size(18.dp))
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text("DEUDAS A FUTURO", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("No afectan tu saldo de hoy", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant.copy(.6f), fontSize=10.sp)
+                        }
+                        // Total
+                        Surface(shape=RoundedCornerShape(50), color=Color(0xFF6366F1).copy(.1f)) {
+                            Text(formatMXN(totalMsiDebt+loansPending).replace("MX$","$"), modifier=Modifier.padding(horizontal=10.dp,vertical=4.dp), fontSize=12.sp, fontWeight=FontWeight.Black, color=Color(0xFF6366F1))
+                        }
                     }
-                    Text("No afectan tu saldo de hoy • Se pagan en meses futuros", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant.copy(.7f))
-                    if (totalMsiDebt>0) FinanceRow("Deuda total MSI restante", formatMXN(totalMsiDebt), BlueBrand)
-                    if (loansPending>0) FinanceRow("Préstamos pendientes de cobro", formatMXN(loansPending), AmberBrand)
+                    Divider(color=MaterialTheme.colorScheme.outline.copy(.15f))
+                    // MSI row
+                    if (totalMsiDebt>0) {
+                        Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                            Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                                Box(Modifier.size(28.dp).clip(RoundedCornerShape(8.dp)).background(BlueBrand.copy(.12f)), contentAlignment=Alignment.Center) {
+                                    Icon(Icons.Default.Autorenew, null, tint=BlueBrand, modifier=Modifier.size(14.dp))
+                                }
+                                Column {
+                                    Text("MSI restante", style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.SemiBold, color=MaterialTheme.colorScheme.onSurface)
+                                    Text("Mensualidades futuras pendientes", fontSize=10.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                            Text(formatMXN(totalMsiDebt), fontWeight=FontWeight.ExtraBold, fontSize=14.sp, color=BlueBrand)
+                        }
+                    }
+                    // Loans row
+                    if (loansPending>0) {
+                        Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                            Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                                Box(Modifier.size(28.dp).clip(RoundedCornerShape(8.dp)).background(AmberBrand.copy(.12f)), contentAlignment=Alignment.Center) {
+                                    Icon(Icons.Default.Handshake, null, tint=AmberBrand, modifier=Modifier.size(14.dp))
+                                }
+                                Column {
+                                    Text("Préstamos por cobrar", style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.SemiBold, color=MaterialTheme.colorScheme.onSurface)
+                                    Text("${state.loans.count{it.status=="pending"}} préstamo${if(state.loans.count{it.status=="pending"}>1)"s" else ""} pendiente${if(state.loans.count{it.status=="pending"}>1)"s" else ""}", fontSize=10.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                            Text(formatMXN(loansPending), fontWeight=FontWeight.ExtraBold, fontSize=14.sp, color=AmberBrand)
+                        }
+                    }
                 }
             }
         }
