@@ -238,6 +238,79 @@ fun CategoryBar(
     }
 }
 
+// ── Weekly Bar Chart (Mon–Sun daily spending) ────────────────────────────────
+
+@Composable
+fun WeeklyBarChart(
+    days: List<Triple<String, Double, Double>>, // (dateLabel, income, expense)
+    todayIdx: Int,
+    modifier: Modifier = Modifier
+) {
+    val maxVal = remember(days) {
+        days.maxOfOrNull { maxOf(it.second, it.third) }.takeIf { it != null && it > 0 } ?: 1.0
+    }
+    var selectedIdx by remember { mutableIntStateOf(todayIdx) }
+    val dayNames = listOf("Lun","Mar","Mié","Jue","Vie","Sáb","Dom")
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Tooltip always visible
+        val sel = days.getOrNull(selectedIdx)
+        if (sel != null) {
+            val (label, inc, exp) = sel
+            val balance = inc - exp
+            Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
+                Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (selectedIdx == todayIdx) GreenBrand else MaterialTheme.colorScheme.onSurface)
+                        if (selectedIdx == todayIdx) Surface(shape = RoundedCornerShape(50), color = GreenBrand.copy(.15f)) {
+                            Text("Hoy", modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp), fontSize = 9.sp, color = GreenBrand, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (inc > 0) Text("↑${formatMXN(inc)}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                        if (exp > 0) Text("↓${formatMXN(exp)}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                        if (inc == 0.0 && exp == 0.0) Text("Sin movimientos", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+        }
+
+        // Bars
+        Row(modifier = Modifier.fillMaxWidth().height(70.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
+            days.forEachIndexed { idx, (_, inc, exp) ->
+                val isToday = idx == todayIdx
+                val isSelected = idx == selectedIdx
+                val incPct by animateFloatAsState((inc / maxVal).toFloat().coerceIn(0f, 1f), tween(600, idx * 50, EaseOutCubic), label = "wi$idx")
+                val expPct by animateFloatAsState((exp / maxVal).toFloat().coerceIn(0f, 1f), tween(600, idx * 50 + 25, EaseOutCubic), label = "we$idx")
+                val alpha = if (!isSelected && selectedIdx != -1) .4f else 1f
+
+                Column(modifier = Modifier.weight(1f).fillMaxHeight().clickable { selectedIdx = idx },
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                    if (isToday) { Box(Modifier.size(4.dp).clip(androidx.compose.foundation.shape.CircleShape).background(GreenBrand)); Spacer(Modifier.height(2.dp)) }
+                    else Spacer(Modifier.height(6.dp))
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.Bottom) {
+                        if (inc > 0) Box(Modifier.weight(1f).fillMaxHeight(incPct.coerceAtLeast(0.03f)).clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(Color(0xFF10B981).copy(alpha)))
+                        else Box(Modifier.weight(1f).fillMaxHeight(0.03f).clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(Color(0x0F10B981)))
+                        Spacer(Modifier.width(2.dp))
+                        if (exp > 0) Box(Modifier.weight(1f).fillMaxHeight(expPct.coerceAtLeast(0.03f)).clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(Color(0xFFEF4444).copy(alpha)))
+                        else Box(Modifier.weight(1f).fillMaxHeight(0.03f).clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(Color(0x0FEF4444)))
+                    }
+                }
+            }
+        }
+
+        // Day labels
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            dayNames.forEachIndexed { idx, name ->
+                Text(name, modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 9.sp,
+                    color = when { idx == todayIdx -> GreenBrand; idx == selectedIdx -> MaterialTheme.colorScheme.onSurface; else -> MaterialTheme.colorScheme.onSurfaceVariant },
+                    fontWeight = if (idx == todayIdx || idx == selectedIdx) FontWeight.Bold else FontWeight.Normal)
+            }
+        }
+    }
+}
+
 // ── Monthly Bar Chart (6 months income vs expense) ───────────────────────────
 
 @Composable

@@ -26,7 +26,9 @@ import com.mifinanza.app.data.*
 import com.mifinanza.app.ui.components.*
 import com.mifinanza.app.ui.theme.*
 import com.mifinanza.app.viewmodel.AppViewModel
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 import kotlin.math.*
 
 // ── Animated number ──────────────────────────────────────────────────────────
@@ -173,8 +175,34 @@ fun DashboardScreen(vm: AppViewModel) {
 
     val overdueLoans = remember(state.loans) { state.loans.filter { it.status=="pending" && daysUntilDate(it.expectedReturnDate)<0 } }
     val pendingSubs  = state.subscriptions.filter { it.active && it.lastPaidMonth!=ym }
-    // Solo MSI que NO han sido pagados este mes
     val unpaidMSI    = state.msiPlans.filter { it.status=="active" && it.payments.none { p -> p.date.startsWith(ym) } }
+
+    // ── Today data ───────────────────────────────────────────────────────────
+    val todayStr = today()
+    val todayTxs  = remember(state.transactions, todayStr) { state.transactions.filter { it.date == todayStr } }
+    val todayInc  = todayTxs.filter { it.type=="income" }.sumOf { it.amount }
+    val todayExp  = todayTxs.filter { it.type=="expense" }.sumOf { it.amount }
+
+    // ── Weekly data (Mon–Sun of current week) ─────────────────────────────────
+    val weekDays = remember(state.transactions, todayStr) {
+        val cal = Calendar.getInstance()
+        // Move to Monday of current week
+        val dow = cal.get(Calendar.DAY_OF_WEEK)
+        val daysFromMon = if (dow == Calendar.SUNDAY) 6 else dow - Calendar.MONDAY
+        cal.add(Calendar.DAY_OF_MONTH, -daysFromMon)
+        (0..6).map { offset ->
+            val dayCal = cal.clone() as Calendar
+            dayCal.add(Calendar.DAY_OF_MONTH, offset)
+            val dayStr = String.format("%d-%02d-%02d", dayCal.get(Calendar.YEAR), dayCal.get(Calendar.MONTH)+1, dayCal.get(Calendar.DAY_OF_MONTH))
+            val dayLabel = SimpleDateFormat("d MMM", Locale("es","MX")).format(dayCal.time)
+            val txs = state.transactions.filter { it.date == dayStr }
+            Triple(dayLabel, txs.filter{it.type=="income"}.sumOf{it.amount}, txs.filter{it.type=="expense"}.sumOf{it.amount})
+        }
+    }
+    val todayDowIdx = remember(todayStr) {
+        val dow = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+        if (dow == Calendar.SUNDAY) 6 else dow - Calendar.MONDAY
+    }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(bottom=24.dp)) {
 
@@ -297,6 +325,60 @@ fun DashboardScreen(vm: AppViewModel) {
                     Spacer(Modifier.height(6.dp))
                     LinearProgressIndicator(progress={abs(savingRate).coerceIn(0,100)/100f}, modifier=Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)), color=if(savingRate>=0) Color(0xFF10B981) else Color(0xFFEF4444), trackColor=MaterialTheme.colorScheme.surfaceVariant)
                 }
+            }
+        }
+
+        // ── HOY ──────────────────────────────────────────────────────────────
+        Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
+            Column(modifier=Modifier.padding(16.dp), verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                    Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                        Box(Modifier.size(8.dp).clip(CircleShape).background(GreenBrand))
+                        Text("HOY", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Text(SimpleDateFormat("d 'de' MMMM", Locale("es","MX")).format(Calendar.getInstance().time).replaceFirstChar{it.uppercase()}, style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (todayTxs.isEmpty()) {
+                    Text("Sin movimientos hoy", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                        if (todayInc>0) Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFF10B981).copy(.08f)) {
+                            Column(modifier=Modifier.padding(12.dp)) {
+                                Text("INGRESOS", style=MaterialTheme.typography.labelSmall, color=Color(0xFF10B981).copy(.7f))
+                                Text(formatMXN(todayInc), fontWeight=FontWeight.ExtraBold, fontSize=16.sp, color=Color(0xFF10B981))
+                            }
+                        }
+                        if (todayExp>0) Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFFEF4444).copy(.08f)) {
+                            Column(modifier=Modifier.padding(12.dp)) {
+                                Text("GASTOS", style=MaterialTheme.typography.labelSmall, color=Color(0xFFEF4444).copy(.7f))
+                                Text(formatMXN(todayExp), fontWeight=FontWeight.ExtraBold, fontSize=16.sp, color=Color(0xFFEF4444))
+                            }
+                        }
+                    }
+                    // Last 3 transactions today
+                    Column(verticalArrangement=Arrangement.spacedBy(6.dp)) {
+                        todayTxs.take(3).forEach { tx ->
+                            val meta = getCategoryMeta(tx.category)
+                            Row(modifier=Modifier.fillMaxWidth(), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                                Box(Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(categoryColor(tx.category).copy(.12f)), contentAlignment=Alignment.Center) { Text(meta.emoji, fontSize=14.sp) }
+                                Text(tx.description, modifier=Modifier.weight(1f), style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurface, fontWeight=FontWeight.Medium)
+                                Text("${if(tx.type=="income")"+" else "−"}${formatMXN(tx.amount)}", fontWeight=FontWeight.Bold, fontSize=13.sp, color=if(tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── ESTA SEMANA ───────────────────────────────────────────────────────
+        Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
+            Column(modifier=Modifier.padding(16.dp)) {
+                Row(modifier=Modifier.fillMaxWidth().padding(bottom=10.dp), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                    Text("ESTA SEMANA", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    val weekExp = weekDays.sumOf { it.third }
+                    if (weekExp > 0) Text(formatMXN(weekExp), style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
+                }
+                WeeklyBarChart(days=weekDays, todayIdx=todayDowIdx)
             }
         }
 
