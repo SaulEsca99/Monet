@@ -147,11 +147,16 @@ class AppRepository(private val context: Context) {
     }
 
     suspend fun markMsiMonthNoDeduct(current: AppState, planId: String): AppState {
+        val plan = current.msiPlans.find { it.id == planId } ?: return current
+        val newPaid = plan.paidMonths + 1
+        // Register payment record (no_deduct) so paidThisMonth detection works correctly
+        val payment = MsiPayment(month = newPaid, amount = plan.monthlyPayment, type = "no_deduct", accountId = "")
         val newPlans = current.msiPlans.map {
-            if (it.id == planId) {
-                val newPaid = it.paidMonths + 1
-                it.copy(paidMonths = newPaid, status = if (newPaid >= it.months) "paid_off" else "active")
-            } else it
+            if (it.id == planId) it.copy(
+                paidMonths = newPaid,
+                status = if (newPaid >= it.months) "paid_off" else "active",
+                payments = it.payments + payment
+            ) else it
         }
         return current.copy(msiPlans = newPlans).also { save(it) }
     }

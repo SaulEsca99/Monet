@@ -184,6 +184,8 @@ private fun MsiPlanCard(plan: MsiPlan, accounts: List<Account>, onConfirm: () ->
         }
 
         Spacer(Modifier.height(10.dp))
+        val nextDays = if (paidThisMonth) daysUntilNextMonthDay(plan.paymentDay) else days
+        val nextLabel = if (paidThisMonth) nextMonthLabel(plan.paymentDay) else "día ${plan.paymentDay}"
         Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
             .background(when { paidThisMonth -> GreenBrand.copy(.1f); urgent -> AmberBrand.copy(.1f); else -> MaterialTheme.colorScheme.surfaceVariant })
             .border(if (paidThisMonth || urgent) 1.dp else 0.dp, if (paidThisMonth) GreenBrand.copy(.3f) else AmberBrand.copy(.3f), RoundedCornerShape(10.dp))
@@ -198,7 +200,7 @@ private fun MsiPlanCard(plan: MsiPlan, accounts: List<Account>, onConfirm: () ->
                 Spacer(Modifier.width(6.dp))
                 Text(
                     when {
-                        paidThisMonth -> "✓ Pagado este mes · próximo cobro día ${plan.paymentDay}"
+                        paidThisMonth -> "✓ Pagado · próximo cobro $nextLabel · en $nextDays días"
                         days == 0 -> "🔔 ¡Hoy se cobra! · Día ${plan.paymentDay}"
                         urgent -> "⚡ Cobro en $days días · Día ${plan.paymentDay}"
                         else -> "Cobro día ${plan.paymentDay} · en $days días"

@@ -28,13 +28,28 @@ fun monthLabel(ym: String): String {
 fun daysUntilDay(day: Int): Int {
     val now = Calendar.getInstance()
     val target = Calendar.getInstance().apply {
-        set(Calendar.DAY_OF_MONTH, day)
+        set(Calendar.DAY_OF_MONTH, day.coerceAtMost(getActualMaximum(Calendar.DAY_OF_MONTH)))
         if (get(Calendar.DAY_OF_MONTH) <= now.get(Calendar.DAY_OF_MONTH)) {
             add(Calendar.MONTH, 1)
+            set(Calendar.DAY_OF_MONTH, day.coerceAtMost(getActualMaximum(Calendar.DAY_OF_MONTH)))
         }
     }
-    val diff = target.timeInMillis - now.timeInMillis
-    return (diff / 86400000).toInt()
+    return ((target.timeInMillis - now.timeInMillis) / 86400000).toInt()
+}
+
+// Siempre cuenta al mes SIGUIENTE (para cuando ya pagaste este mes)
+fun daysUntilNextMonthDay(day: Int): Int {
+    val target = Calendar.getInstance().apply {
+        add(Calendar.MONTH, 1)
+        set(Calendar.DAY_OF_MONTH, day.coerceAtMost(getActualMaximum(Calendar.DAY_OF_MONTH)))
+    }
+    return ((target.timeInMillis - Calendar.getInstance().timeInMillis) / 86400000).toInt()
+}
+
+fun nextMonthLabel(day: Int): String {
+    val cal = Calendar.getInstance().apply { add(Calendar.MONTH, 1) }
+    val month = SimpleDateFormat("MMM", Locale("es", "MX")).format(cal.time).replaceFirstChar { it.uppercase() }
+    return "$day $month"
 }
 
 fun daysUntilDate(dateStr: String): Int {
