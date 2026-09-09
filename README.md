@@ -7,7 +7,7 @@ Kotlin + Jetpack Compose + Material 3
 
 ## Descarga
 
-> **[⬇ Descargar APK (v16)](../../releases/latest)**
+> **[⬇ Descargar Monet-v1.0.apk](https://github.com/SaulEsca99/Monet/releases/download/v1.0/Monet-v1.0.apk)**
 
 Instala el APK en tu Android directamente. Requiere Android 8.0+ (API 26).
 
