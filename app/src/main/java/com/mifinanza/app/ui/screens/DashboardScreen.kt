@@ -387,7 +387,7 @@ fun DashboardScreen(vm: AppViewModel) {
                 Text("RECIENTES", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant, modifier=Modifier.padding(start=4.dp))
                 Surface(shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
                     Column(modifier=Modifier.fillMaxWidth()) {
-                        state.transactions.take(5).forEachIndexed { i, tx ->
+                        state.transactions.sortedByDescending { it.date }.take(5).forEachIndexed { i, tx ->
                             val acc=state.accounts.find{it.id==tx.accountId}; val meta=getCategoryMeta(tx.category)
                             Row(modifier=Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=12.dp), verticalAlignment=Alignment.CenterVertically) {
                                 Box(Modifier.width(3.dp).height(40.dp).clip(RoundedCornerShape(2.dp)).background(categoryColor(tx.category)))

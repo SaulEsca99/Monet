@@ -7,65 +7,78 @@ import java.util.*
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+// Locale fijo para que las fechas sean consistentes en cualquier dispositivo
+private val ISO_DATE   = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+private val ISO_MONTH  = SimpleDateFormat("yyyy-MM",    Locale.US)
+private val ES_DISPLAY = Locale("es", "MX")
+
 fun generateId() = System.currentTimeMillis().toString(36) + (0..99999).random().toString(36)
 
-fun today(): String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+fun today(): String = ISO_DATE.format(Date())
 
-fun currentYearMonth(): String = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Date())
+fun currentYearMonth(): String = ISO_MONTH.format(Date())
 
 fun formatMXN(amount: Double): String =
-    NumberFormat.getCurrencyInstance(Locale("es", "MX")).format(amount)
+    NumberFormat.getCurrencyInstance(ES_DISPLAY).format(amount)
 
 fun monthLabel(ym: String): String {
     return try {
-        val sdf = SimpleDateFormat("yyyy-MM", Locale("es", "MX"))
-        val cal = Calendar.getInstance().apply { time = sdf.parse("$ym-01")!! }
-        val month = SimpleDateFormat("MMM", Locale("es", "MX")).format(cal.time)
-        month.replaceFirstChar { it.uppercase() }
+        val cal = Calendar.getInstance().apply { time = SimpleDateFormat("yyyy-MM", Locale.US).parse("$ym-01")!! }
+        SimpleDateFormat("MMM", ES_DISPLAY).format(cal.time).replaceFirstChar { it.uppercase() }
     } catch (e: Exception) { ym }
 }
 
+// Días hasta el próximo cobro en el MES ACTUAL o siguiente si ya pasó
 fun daysUntilDay(day: Int): Int {
     val now = Calendar.getInstance()
     val target = Calendar.getInstance().apply {
-        set(Calendar.DAY_OF_MONTH, day.coerceAtMost(getActualMaximum(Calendar.DAY_OF_MONTH)))
+        val maxDay = getActualMaximum(Calendar.DAY_OF_MONTH)
+        set(Calendar.DAY_OF_MONTH, day.coerceIn(1, maxDay))
+        // Si el día ya pasó o es hoy, mover al mes siguiente
         if (get(Calendar.DAY_OF_MONTH) <= now.get(Calendar.DAY_OF_MONTH)) {
             add(Calendar.MONTH, 1)
-            set(Calendar.DAY_OF_MONTH, day.coerceAtMost(getActualMaximum(Calendar.DAY_OF_MONTH)))
+            set(Calendar.DAY_OF_MONTH, day.coerceIn(1, getActualMaximum(Calendar.DAY_OF_MONTH)))
         }
     }
-    return ((target.timeInMillis - now.timeInMillis) / 86400000).toInt()
+    return ((target.timeInMillis - now.timeInMillis) / 86400000).toInt().coerceAtLeast(0)
 }
 
-// Siempre cuenta al mes SIGUIENTE (para cuando ya pagaste este mes)
+// Siempre cuenta al MES SIGUIENTE (cuando ya pagaste este mes)
 fun daysUntilNextMonthDay(day: Int): Int {
+    val now = Calendar.getInstance()
     val target = Calendar.getInstance().apply {
         add(Calendar.MONTH, 1)
-        set(Calendar.DAY_OF_MONTH, day.coerceAtMost(getActualMaximum(Calendar.DAY_OF_MONTH)))
+        set(Calendar.DAY_OF_MONTH, day.coerceIn(1, getActualMaximum(Calendar.DAY_OF_MONTH)))
     }
-    return ((target.timeInMillis - Calendar.getInstance().timeInMillis) / 86400000).toInt()
+    return ((target.timeInMillis - now.timeInMillis) / 86400000).toInt().coerceAtLeast(1)
 }
 
+// Etiqueta "22 Oct" para el próximo mes
 fun nextMonthLabel(day: Int): String {
     val cal = Calendar.getInstance().apply { add(Calendar.MONTH, 1) }
-    val month = SimpleDateFormat("MMM", Locale("es", "MX")).format(cal.time).replaceFirstChar { it.uppercase() }
-    return "$day $month"
+    val month = SimpleDateFormat("MMM", ES_DISPLAY).format(cal.time).replaceFirstChar { it.uppercase() }
+    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+    return "${day.coerceIn(1, maxDay)} $month"
+}
+
+// Etiqueta "22 Sep" para el mes actual
+fun currentMonthLabel(day: Int): String {
+    val cal = Calendar.getInstance()
+    val month = SimpleDateFormat("MMM", ES_DISPLAY).format(cal.time).replaceFirstChar { it.uppercase() }
+    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+    return "${day.coerceIn(1, maxDay)} $month"
 }
 
 fun daysUntilDate(dateStr: String): Int {
     return try {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val target = sdf.parse(dateStr) ?: return 0
-        val diff = target.time - Date().time
-        (diff / 86400000).toInt()
+        val target = ISO_DATE.parse(dateStr) ?: return 0
+        ((target.time - Date().time) / 86400000).toInt()
     } catch (e: Exception) { 0 }
 }
 
 fun formatDate(dateStr: String): String {
     return try {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val out = SimpleDateFormat("d MMM yyyy", Locale("es", "MX"))
-        out.format(sdf.parse(dateStr)!!)
+        SimpleDateFormat("d MMM yyyy", ES_DISPLAY).format(ISO_DATE.parse(dateStr)!!)
     } catch (e: Exception) { dateStr }
 }
 

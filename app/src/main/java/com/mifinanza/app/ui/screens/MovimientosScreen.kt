@@ -42,6 +42,7 @@ fun MovimientosScreen(vm: AppViewModel) {
         state.transactions
             .filter { it.date.startsWith(filterYM) }
             .let { list -> if (filterCategory != null) list.filter { it.category == filterCategory } else list }
+            .sortedByDescending { it.date }
     }
     val inc = filtered.filter { it.type == "income" }.sumOf { it.amount }
     val exp = filtered.filter { it.type == "expense" }.sumOf { it.amount }
