@@ -565,9 +565,10 @@ fun DashboardScreen(vm: AppViewModel) {
                         state.transactions.sortedByDescending { it.date }.take(5).forEachIndexed { i, tx ->
                             val acc=state.accounts.find{it.id==tx.accountId}; val meta=getCategoryMeta(tx.category)
                             Row(modifier=Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=12.dp), verticalAlignment=Alignment.CenterVertically) {
-                                Box(Modifier.width(3.dp).height(40.dp).clip(RoundedCornerShape(2.dp)).background(categoryColor(tx.category)))
+                                val txC = if(tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444)
+                                Box(Modifier.width(3.dp).height(40.dp).clip(RoundedCornerShape(2.dp)).background(txC))
                                 Spacer(Modifier.width(10.dp))
-                                Box(Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(categoryColor(tx.category).copy(.12f)), contentAlignment=Alignment.Center) { Text(meta.emoji, fontSize=18.sp) }
+                                Box(Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(txC.copy(.12f)), contentAlignment=Alignment.Center) { Text(meta.emoji, fontSize=18.sp) }
                                 Spacer(Modifier.width(10.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(tx.description, fontWeight=FontWeight.SemiBold, fontSize=13.sp, color=MaterialTheme.colorScheme.onSurface)

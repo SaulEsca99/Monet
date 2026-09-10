@@ -189,10 +189,10 @@ fun MovimientosScreen(vm: AppViewModel) {
                         }) {
                         Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
                             Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                // Category color accent bar on left
-                                Box(modifier = Modifier.width(4.dp).height(44.dp).clip(RoundedCornerShape(2.dp)).background(categoryColor(tx.category)))
+                                val txColor = if (tx.type == "income") Color(0xFF10B981) else Color(0xFFEF4444)
+                                Box(modifier = Modifier.width(4.dp).height(44.dp).clip(RoundedCornerShape(2.dp)).background(txColor))
                                 Spacer(Modifier.width(10.dp))
-                                Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(categoryColor(tx.category).copy(.15f)), contentAlignment = Alignment.Center) {
+                                Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(txColor.copy(.15f)), contentAlignment = Alignment.Center) {
                                     Text(meta.emoji, fontSize = 20.sp)
                                 }
                                 Spacer(Modifier.width(12.dp))
