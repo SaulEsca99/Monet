@@ -343,14 +343,13 @@ fun DashboardScreen(vm: AppViewModel) {
             }
         } // end stats item
 
-        // ── HOY ──────────────────────────────────────────────────────────────
         item {
+        // ── HOY ──────────────────────────────────────────────────────────────
         Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
             Column(modifier=Modifier.padding(16.dp)) {
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
                     Row(verticalAlignment=Alignment.CenterVertically) {
-                        Box(Modifier.size(7.dp).clip(CircleShape).background(GreenBrand))
-                        Spacer(Modifier.width(6.dp))
+                        Box(Modifier.size(7.dp).clip(CircleShape).background(GreenBrand)); Spacer(Modifier.width(6.dp))
                         Text("HOY", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text(todayLabel, fontSize=11.sp, color=GreenBrand, fontWeight=FontWeight.SemiBold)
@@ -379,8 +378,7 @@ fun DashboardScreen(vm: AppViewModel) {
                         Spacer(Modifier.height(5.dp))
                         Surface(shape=RoundedCornerShape(10.dp), color=MaterialTheme.colorScheme.surfaceVariant) {
                             Row(modifier=Modifier.fillMaxWidth().padding(10.dp), verticalAlignment=Alignment.CenterVertically) {
-                                Text(meta.emoji, fontSize=16.sp)
-                                Spacer(Modifier.width(8.dp))
+                                Text(meta.emoji, fontSize=16.sp); Spacer(Modifier.width(8.dp))
                                 Text(tx.description, modifier=Modifier.weight(1f), fontSize=13.sp, color=MaterialTheme.colorScheme.onSurface)
                                 Text("${if(tx.type=="income")"+" else "−"}${formatMXN(tx.amount)}", fontSize=13.sp, fontWeight=FontWeight.Bold, color=if(tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444))
                             }
@@ -389,10 +387,7 @@ fun DashboardScreen(vm: AppViewModel) {
                 }
             }
         }
-        } // end HOY item
-
         // ── ESTA SEMANA ───────────────────────────────────────────────────────
-        item {
         Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
             Column(modifier=Modifier.padding(16.dp)) {
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
@@ -420,13 +415,10 @@ fun DashboardScreen(vm: AppViewModel) {
                         selWeekDay = (offset.x / slotW).toInt().coerceIn(0, 6)
                     }
                 }) {
-                    val slotW = size.width / 7f
-                    val maxH = size.height - 10.dp.toPx()
+                    val slotW = size.width / 7f; val maxH = size.height - 10.dp.toPx()
                     weekDays.forEachIndexed { idx, (_, wInc, wExp) ->
-                        val cx = slotW * idx + slotW / 2f
-                        val isSel = idx == selWeekDay
-                        val alpha = if (!isSel && selWeekDay != -1) .3f else 1f
-                        val barW = slotW * 0.28f
+                        val cx = slotW * idx + slotW / 2f; val isSel = idx == selWeekDay
+                        val alpha = if (!isSel && selWeekDay != -1) .3f else 1f; val barW = slotW * 0.28f
                         val incH = ((wInc / weekMax).toFloat().coerceIn(0.05f, 1f)) * maxH
                         drawRoundRect(Color(0xFF10B981).copy(if(wInc>0) alpha else .1f), topLeft=androidx.compose.ui.geometry.Offset(cx-barW-1.dp.toPx(), size.height-incH), size=androidx.compose.ui.geometry.Size(barW, incH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
                         val expH = ((wExp / weekMax).toFloat().coerceIn(0.05f, 1f)) * maxH
@@ -444,9 +436,6 @@ fun DashboardScreen(vm: AppViewModel) {
                 }
             }
         }
-        } // end ESTA SEMANA item
-
-        item {
         // ── 6-MONTH TREND ────────────────────────────────────────────────────
         Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
             Column(modifier=Modifier.padding(16.dp)) {
