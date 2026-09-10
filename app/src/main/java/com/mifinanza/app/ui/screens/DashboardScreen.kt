@@ -343,89 +343,104 @@ fun DashboardScreen(vm: AppViewModel) {
             }
         } // end stats item
 
-        // ── HOY — item separado ───────────────────────────────────────────────
+        // ── HOY ──────────────────────────────────────────────────────────────
         item {
-        Column(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
-            Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
-                Text("HOY", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(todayLabel, style=MaterialTheme.typography.bodySmall, color=GreenBrand, fontWeight=FontWeight.SemiBold)
-            }
-            Spacer(Modifier.height(10.dp))
-            Row(modifier=Modifier.fillMaxWidth()) {
-                Column(modifier=Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(Color(0xFF10B981).copy(.1f)).padding(12.dp)) {
-                    Text("INGRESOS", fontSize=9.sp, color=Color(0xFF10B981), fontWeight=FontWeight.Bold)
-                    Spacer(Modifier.height(4.dp))
-                    Text(formatMXN(todayInc), fontWeight=FontWeight.ExtraBold, fontSize=15.sp, color=Color(0xFF10B981))
+        Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
+            Column(modifier=Modifier.padding(16.dp)) {
+                Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                    Row(verticalAlignment=Alignment.CenterVertically) {
+                        Box(Modifier.size(7.dp).clip(CircleShape).background(GreenBrand))
+                        Spacer(Modifier.width(6.dp))
+                        Text("HOY", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Text(todayLabel, fontSize=11.sp, color=GreenBrand, fontWeight=FontWeight.SemiBold)
                 }
-                Spacer(Modifier.width(10.dp))
-                Column(modifier=Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(Color(0xFFEF4444).copy(.1f)).padding(12.dp)) {
-                    Text("GASTOS", fontSize=9.sp, color=Color(0xFFEF4444), fontWeight=FontWeight.Bold)
-                    Spacer(Modifier.height(4.dp))
-                    Text(formatMXN(todayExp), fontWeight=FontWeight.ExtraBold, fontSize=15.sp, color=Color(0xFFEF4444))
+                Spacer(Modifier.height(12.dp))
+                Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFF10B981).copy(.1f)) {
+                        Column(modifier=Modifier.padding(12.dp)) {
+                            Text("↑ INGRESOS", fontSize=9.sp, color=Color(0xFF10B981), fontWeight=FontWeight.Bold)
+                            Spacer(Modifier.height(6.dp))
+                            Text(formatMXN(todayInc), fontWeight=FontWeight.ExtraBold, fontSize=16.sp, color=Color(0xFF10B981))
+                        }
+                    }
+                    Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFFEF4444).copy(.1f)) {
+                        Column(modifier=Modifier.padding(12.dp)) {
+                            Text("↓ GASTOS", fontSize=9.sp, color=Color(0xFFEF4444), fontWeight=FontWeight.Bold)
+                            Spacer(Modifier.height(6.dp))
+                            Text(formatMXN(todayExp), fontWeight=FontWeight.ExtraBold, fontSize=16.sp, color=Color(0xFFEF4444))
+                        }
+                    }
                 }
-            }
-            if (todayTxs.isNotEmpty()) {
-                Spacer(Modifier.height(10.dp))
-                todayTxs.take(3).forEach { tx ->
-                    val meta = getCategoryMeta(tx.category)
-                    Spacer(Modifier.height(6.dp))
-                    Row(modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(10.dp)) {
-                        Text(meta.emoji, fontSize=16.sp, modifier=Modifier.width(28.dp))
-                        Text(tx.description, modifier=Modifier.weight(1f), fontSize=13.sp, color=MaterialTheme.colorScheme.onSurface)
-                        Text("${if(tx.type=="income")"+" else "−"}${formatMXN(tx.amount)}", fontSize=13.sp, fontWeight=FontWeight.Bold, color=if(tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444))
+                if (todayTxs.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    todayTxs.take(3).forEach { tx ->
+                        val meta = getCategoryMeta(tx.category)
+                        Spacer(Modifier.height(5.dp))
+                        Surface(shape=RoundedCornerShape(10.dp), color=MaterialTheme.colorScheme.surfaceVariant) {
+                            Row(modifier=Modifier.fillMaxWidth().padding(10.dp), verticalAlignment=Alignment.CenterVertically) {
+                                Text(meta.emoji, fontSize=16.sp)
+                                Spacer(Modifier.width(8.dp))
+                                Text(tx.description, modifier=Modifier.weight(1f), fontSize=13.sp, color=MaterialTheme.colorScheme.onSurface)
+                                Text("${if(tx.type=="income")"+" else "−"}${formatMXN(tx.amount)}", fontSize=13.sp, fontWeight=FontWeight.Bold, color=if(tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444))
+                            }
+                        }
                     }
                 }
             }
         }
         } // end HOY item
 
-        // ── ESTA SEMANA — item separado ───────────────────────────────────────
+        // ── ESTA SEMANA ───────────────────────────────────────────────────────
         item {
-        Column(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
-            Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
-                Text("ESTA SEMANA", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
-                if (weekTotal > 0) Text("↓${formatMXN(weekTotal)}", style=MaterialTheme.typography.bodySmall, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
-                else Text("Sin movimientos", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            val sw = weekDays.getOrNull(selWeekDay)
-            if (sw != null) {
-                Spacer(Modifier.height(8.dp))
-                Row(modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal=12.dp, vertical=8.dp), horizontalArrangement=Arrangement.SpaceBetween) {
-                    Text(sw.first, fontWeight=FontWeight.Bold, fontSize=12.sp, color=if(selWeekDay==todayDowIdx) GreenBrand else MaterialTheme.colorScheme.onSurface)
-                    Row {
-                        if (sw.second > 0) { Spacer(Modifier.width(8.dp)); Text("↑${formatMXN(sw.second)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFF10B981)) }
-                        if (sw.third > 0) { Spacer(Modifier.width(8.dp)); Text("↓${formatMXN(sw.third)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444)) }
-                        if (sw.second == 0.0 && sw.third == 0.0) Text("Sin movimientos", fontSize=11.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
+        Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
+            Column(modifier=Modifier.padding(16.dp)) {
+                Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                    Text("ESTA SEMANA", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (weekTotal > 0) Text("↓${formatMXN(weekTotal)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
+                }
+                val sw = weekDays.getOrNull(selWeekDay)
+                if (sw != null) {
+                    Spacer(Modifier.height(10.dp))
+                    Surface(shape=RoundedCornerShape(10.dp), color=MaterialTheme.colorScheme.surfaceVariant) {
+                        Row(modifier=Modifier.fillMaxWidth().padding(horizontal=12.dp, vertical=8.dp), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
+                            Text(sw.first, fontWeight=FontWeight.Bold, fontSize=12.sp, color=if(selWeekDay==todayDowIdx) GreenBrand else MaterialTheme.colorScheme.onSurface)
+                            Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                                if (sw.second > 0) Text("↑${formatMXN(sw.second)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFF10B981))
+                                if (sw.third > 0) Text("↓${formatMXN(sw.third)}", fontSize=11.sp, fontWeight=FontWeight.Bold, color=Color(0xFFEF4444))
+                                if (sw.second == 0.0 && sw.third == 0.0) Text("Sin mov.", fontSize=11.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                 }
-            }
-            Spacer(Modifier.height(10.dp))
-            Canvas(modifier=Modifier.fillMaxWidth().height(80.dp).pointerInput(weekDays) {
-                detectTapGestures { offset ->
+                Spacer(Modifier.height(10.dp))
+                Canvas(modifier=Modifier.fillMaxWidth().height(80.dp).pointerInput(weekDays) {
+                    detectTapGestures { offset ->
+                        val slotW = size.width / 7f
+                        selWeekDay = (offset.x / slotW).toInt().coerceIn(0, 6)
+                    }
+                }) {
                     val slotW = size.width / 7f
-                    selWeekDay = (offset.x / slotW).toInt().coerceIn(0, 6)
+                    val maxH = size.height - 10.dp.toPx()
+                    weekDays.forEachIndexed { idx, (_, wInc, wExp) ->
+                        val cx = slotW * idx + slotW / 2f
+                        val isSel = idx == selWeekDay
+                        val alpha = if (!isSel && selWeekDay != -1) .3f else 1f
+                        val barW = slotW * 0.28f
+                        val incH = ((wInc / weekMax).toFloat().coerceIn(0.05f, 1f)) * maxH
+                        drawRoundRect(Color(0xFF10B981).copy(if(wInc>0) alpha else .1f), topLeft=androidx.compose.ui.geometry.Offset(cx-barW-1.dp.toPx(), size.height-incH), size=androidx.compose.ui.geometry.Size(barW, incH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                        val expH = ((wExp / weekMax).toFloat().coerceIn(0.05f, 1f)) * maxH
+                        drawRoundRect(Color(0xFFEF4444).copy(if(wExp>0) alpha else .1f), topLeft=androidx.compose.ui.geometry.Offset(cx+1.dp.toPx(), size.height-expH), size=androidx.compose.ui.geometry.Size(barW, expH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                        if (idx == todayDowIdx) drawCircle(GreenBrand, 3.dp.toPx(), center=androidx.compose.ui.geometry.Offset(cx, 5.dp.toPx()))
+                    }
                 }
-            }) {
-                val slotW = size.width / 7f
-                val maxH = size.height - 12.dp.toPx()
-                weekDays.forEachIndexed { idx, (_, wInc, wExp) ->
-                    val cx = slotW * idx + slotW / 2f
-                    val isSel = idx == selWeekDay
-                    val alpha = if (!isSel && selWeekDay != -1) .3f else 1f
-                    val barW = slotW * 0.28f
-                    val incH = ((wInc / weekMax).toFloat().coerceIn(0.05f, 1f)) * maxH
-                    drawRoundRect(Color(0xFF10B981).copy(if(wInc>0) alpha else .12f), topLeft=androidx.compose.ui.geometry.Offset(cx-barW-1.dp.toPx(), size.height-incH), size=androidx.compose.ui.geometry.Size(barW, incH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
-                    val expH = ((wExp / weekMax).toFloat().coerceIn(0.05f, 1f)) * maxH
-                    drawRoundRect(Color(0xFFEF4444).copy(if(wExp>0) alpha else .12f), topLeft=androidx.compose.ui.geometry.Offset(cx+1.dp.toPx(), size.height-expH), size=androidx.compose.ui.geometry.Size(barW, expH), cornerRadius=androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
-                    if (idx == todayDowIdx) drawCircle(GreenBrand, 3.dp.toPx(), center=androidx.compose.ui.geometry.Offset(cx, 5.dp.toPx()))
-                }
-            }
-            Spacer(Modifier.height(6.dp))
-            Row(modifier=Modifier.fillMaxWidth()) {
-                weekDayNames.forEachIndexed { idx, name ->
-                    Text(name, modifier=Modifier.weight(1f), textAlign=androidx.compose.ui.text.style.TextAlign.Center, fontSize=9.sp,
-                        color=if(idx==todayDowIdx) GreenBrand else if(idx==selWeekDay) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight=if(idx==todayDowIdx||idx==selWeekDay) FontWeight.Bold else FontWeight.Normal)
+                Spacer(Modifier.height(4.dp))
+                Row(modifier=Modifier.fillMaxWidth()) {
+                    weekDayNames.forEachIndexed { idx, name ->
+                        Text(name, modifier=Modifier.weight(1f), textAlign=TextAlign.Center, fontSize=9.sp,
+                            color=if(idx==todayDowIdx) GreenBrand else if(idx==selWeekDay) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight=if(idx==todayDowIdx||idx==selWeekDay) FontWeight.Bold else FontWeight.Normal)
+                    }
                 }
             }
         }
