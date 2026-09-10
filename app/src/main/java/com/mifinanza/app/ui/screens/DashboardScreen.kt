@@ -341,9 +341,8 @@ fun DashboardScreen(vm: AppViewModel) {
                     LinearProgressIndicator(progress={abs(savingRate).coerceIn(0,100)/100f}, modifier=Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)), color=if(savingRate>=0) Color(0xFF10B981) else Color(0xFFEF4444), trackColor=MaterialTheme.colorScheme.surfaceVariant)
                 }
             }
-        } // end stats item
+        } // closes stats Row — item still open
 
-        item {
         // ── HOY ──────────────────────────────────────────────────────────────
         Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
             Column(modifier=Modifier.padding(16.dp)) {

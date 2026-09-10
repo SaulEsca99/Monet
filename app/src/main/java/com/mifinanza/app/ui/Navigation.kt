@@ -54,9 +54,7 @@ fun AppNavigation(vm: AppViewModel = viewModel()) {
     val isDataLoaded by vm.isDataLoaded.collectAsState()
 
     if (!isDataLoaded) {
-        Box(modifier = androidx.compose.ui.Modifier.fillMaxSize()
-            .background(androidx.compose.ui.graphics.Color(0xFF0F1926)),
-            contentAlignment = androidx.compose.ui.Alignment.Center) {}
+        Box(modifier = Modifier.fillMaxSize()) {}
         return
     }
 
