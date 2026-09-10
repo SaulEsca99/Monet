@@ -190,23 +190,37 @@ fun MovimientosScreen(vm: AppViewModel) {
                             }
                         }) {
                         Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
-                            Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 val txColor = if (tx.type == "income") Color(0xFF10B981) else Color(0xFFEF4444)
-                                Box(modifier = Modifier.width(4.dp).height(44.dp).clip(RoundedCornerShape(2.dp)).background(txColor))
+                                // Left accent bar
+                                Box(modifier = Modifier.width(3.dp).height(50.dp).clip(RoundedCornerShape(2.dp)).background(txColor))
                                 Spacer(Modifier.width(10.dp))
-                                Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(txColor.copy(.15f)), contentAlignment = Alignment.Center) {
-                                    Text(meta.emoji, fontSize = 20.sp)
+                                // Icon
+                                Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(txColor.copy(.15f)), contentAlignment = Alignment.Center) {
+                                    Text(meta.emoji, fontSize = 22.sp)
                                 }
                                 Spacer(Modifier.width(12.dp))
+                                // Info
                                 Column(Modifier.weight(1f)) {
-                                    Text(tx.description, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-                                    Text("${tx.date.substring(8)} ${monthLabel(tx.date.substring(0, 7))} · ${acc?.name ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(tx.description, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
+                                    Spacer(Modifier.height(2.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(meta.name, fontSize = 11.sp, color = categoryColor(tx.category))
+                                        Text(" · ", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("${tx.date.substring(8)} ${monthLabel(tx.date.substring(0,7))}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        if (tx.time.isNotEmpty()) {
+                                            Text(" ${tx.time}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(.7f))
+                                        }
+                                    }
+                                    Text(acc?.name ?: "", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(.6f))
                                 }
-                                Text(
-                                    "${if (tx.type == "income") "+" else "−"}${formatMXN(tx.amount)}",
-                                    fontWeight = FontWeight.ExtraBold, fontSize = 16.sp,
-                                    color = if (tx.type == "income") Color(0xFF10B981) else Color(0xFFEF4444)
-                                )
+                                // Amount
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("${if (tx.type == "income") "+" else "−"}${formatMXN(tx.amount)}", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, color = txColor)
+                                    Surface(shape = RoundedCornerShape(6.dp), color = txColor.copy(.12f)) {
+                                        Text(if(tx.type=="income") "Ingreso" else "Gasto", modifier=Modifier.padding(horizontal=6.dp, vertical=2.dp), fontSize=9.sp, color=txColor, fontWeight=FontWeight.Bold)
+                                    }
+                                }
                             }
                         }
                         } // end SwipeToDismissBox

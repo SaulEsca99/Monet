@@ -111,6 +111,7 @@ data class Transaction(
     val description: String,
     val category: String = "other",
     val date: String = today(),
+    val time: String = SimpleDateFormat("HH:mm", Locale.US).format(java.util.Date()),
     val source: String = "manual" // "manual" | "subscription" | "msi"
 )
 

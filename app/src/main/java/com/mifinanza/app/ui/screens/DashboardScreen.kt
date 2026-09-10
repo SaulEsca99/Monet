@@ -161,14 +161,11 @@ fun DashboardScreen(vm: AppViewModel) {
         for (tx in sorted.reversed()) { b -= if (tx.type=="income") tx.amount else -tx.amount; v.add(0,b) }
         v.takeLast(8)
     }
-    // Tonos de rojo para gastos en el donut (más oscuro = más gasto)
-    val donutRedPalette = listOf(Color(0xFFEF4444), Color(0xFFDC2626), Color(0xFFF97316), Color(0xFFEF4444).copy(.7f), Color(0xFFEF4444).copy(.5f))
     val donutSegs = remember(mTxs, exp) {
         if (exp==0.0) emptyList()
         else mTxs.filter { it.type=="expense" }.groupBy { it.category }
-            .map { (cat,txs) -> val amt=txs.sumOf{it.amount}; DonutSeg(getCategoryMeta(cat).name, getCategoryMeta(cat).emoji, amt, (amt/exp).toFloat(), Color(0xFFEF4444)) }
+            .map { (cat,txs) -> val amt=txs.sumOf{it.amount}; DonutSeg(getCategoryMeta(cat).name, getCategoryMeta(cat).emoji, amt, (amt/exp).toFloat(), categoryColor(cat)) }
             .sortedByDescending { it.pct }.take(5)
-            .mapIndexed { i, s -> s.copy(color = donutRedPalette.getOrElse(i) { Color(0xFFEF4444) }) }
     }
     val last6 = remember(state.transactions) {
         (0..5).map { ago ->
@@ -346,15 +343,26 @@ fun DashboardScreen(vm: AppViewModel) {
             }
         } // closes stats Row — item still open
 
-        // ── HOY ──────────────────────────────────────────────────────────────
-        Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
+        // ── HOY — expandible ─────────────────────────────────────────────────
+        var hoyExpanded by remember { mutableStateOf(false) }
+        val todayCats = remember(todayTxs, todayExp) {
+            if (todayExp == 0.0) emptyList()
+            else todayTxs.filter { it.type == "expense" }.groupBy { it.category }
+                .map { (cat, txs) -> Triple(getCategoryMeta(cat), txs.sumOf { it.amount }, (txs.sumOf { it.amount } / todayExp * 100).toInt()) }
+                .sortedByDescending { it.second }
+        }
+        Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp).clickable { hoyExpanded = !hoyExpanded }, shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
             Column(modifier=Modifier.padding(16.dp)) {
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween, verticalAlignment=Alignment.CenterVertically) {
                     Row(verticalAlignment=Alignment.CenterVertically) {
                         Box(Modifier.size(7.dp).clip(CircleShape).background(GreenBrand)); Spacer(Modifier.width(6.dp))
                         Text("HOY", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text(todayLabel, fontSize=11.sp, color=GreenBrand, fontWeight=FontWeight.SemiBold)
+                    Row(verticalAlignment=Alignment.CenterVertically) {
+                        Text(todayLabel, fontSize=11.sp, color=GreenBrand, fontWeight=FontWeight.SemiBold)
+                        Spacer(Modifier.width(6.dp))
+                        Icon(if (hoyExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, tint=MaterialTheme.colorScheme.onSurfaceVariant, modifier=Modifier.size(16.dp))
+                    }
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -373,16 +381,50 @@ fun DashboardScreen(vm: AppViewModel) {
                         }
                     }
                 }
-                if (todayTxs.isNotEmpty()) {
-                    Spacer(Modifier.height(10.dp))
-                    todayTxs.take(3).forEach { tx ->
-                        val meta = getCategoryMeta(tx.category)
-                        Spacer(Modifier.height(5.dp))
-                        Surface(shape=RoundedCornerShape(10.dp), color=MaterialTheme.colorScheme.surfaceVariant) {
-                            Row(modifier=Modifier.fillMaxWidth().padding(10.dp), verticalAlignment=Alignment.CenterVertically) {
-                                Text(meta.emoji, fontSize=16.sp); Spacer(Modifier.width(8.dp))
-                                Text(tx.description, modifier=Modifier.weight(1f), fontSize=13.sp, color=MaterialTheme.colorScheme.onSurface)
-                                Text("${if(tx.type=="income")"+" else "−"}${formatMXN(tx.amount)}", fontSize=13.sp, fontWeight=FontWeight.Bold, color=if(tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444))
+                // Expandible: detalle categorías + transacciones
+                AnimatedVisibility(visible = hoyExpanded, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                    Column {
+                        if (todayCats.isNotEmpty()) {
+                            Spacer(Modifier.height(12.dp))
+                            Text("DESGLOSE DE GASTOS", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(8.dp))
+                            todayCats.forEach { (meta, amt, pct) ->
+                                Row(modifier=Modifier.fillMaxWidth().padding(vertical=4.dp), verticalAlignment=Alignment.CenterVertically) {
+                                    Box(Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(categoryColor(meta.id).copy(.15f)), contentAlignment=Alignment.Center) { Text(meta.emoji, fontSize=14.sp) }
+                                    Spacer(Modifier.width(8.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(meta.name, fontSize=12.sp, fontWeight=FontWeight.SemiBold, color=MaterialTheme.colorScheme.onSurface)
+                                        LinearProgressIndicator(progress={pct/100f}, modifier=Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)), color=categoryColor(meta.id), trackColor=MaterialTheme.colorScheme.surfaceVariant)
+                                    }
+                                    Spacer(Modifier.width(8.dp))
+                                    Column(horizontalAlignment=Alignment.End) {
+                                        Text("$pct%", fontSize=11.sp, fontWeight=FontWeight.Bold, color=categoryColor(meta.id))
+                                        Text(formatMXN(amt), fontSize=10.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                            }
+                        }
+                        if (todayTxs.isNotEmpty()) {
+                            Spacer(Modifier.height(12.dp))
+                            Divider(color=MaterialTheme.colorScheme.outline.copy(.2f))
+                            Spacer(Modifier.height(8.dp))
+                            Text("MOVIMIENTOS DE HOY", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(8.dp))
+                            todayTxs.forEach { tx ->
+                                val meta = getCategoryMeta(tx.category)
+                                val txColor = if (tx.type=="income") Color(0xFF10B981) else Color(0xFFEF4444)
+                                Spacer(Modifier.height(5.dp))
+                                Surface(shape=RoundedCornerShape(12.dp), color=MaterialTheme.colorScheme.surfaceVariant) {
+                                    Row(modifier=Modifier.fillMaxWidth().padding(horizontal=12.dp, vertical=10.dp), verticalAlignment=Alignment.CenterVertically) {
+                                        Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(txColor.copy(.15f)), contentAlignment=Alignment.Center) { Text(meta.emoji, fontSize=16.sp) }
+                                        Spacer(Modifier.width(10.dp))
+                                        Column(Modifier.weight(1f)) {
+                                            Text(tx.description, fontSize=13.sp, fontWeight=FontWeight.SemiBold, color=MaterialTheme.colorScheme.onSurface)
+                                            Text("${meta.name} · ${tx.time.ifEmpty { "–" }}", fontSize=10.sp, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Text("${if(tx.type=="income")"+" else "−"}${formatMXN(tx.amount)}", fontSize=13.sp, fontWeight=FontWeight.Bold, color=txColor)
+                                    }
+                                }
                             }
                         }
                     }
