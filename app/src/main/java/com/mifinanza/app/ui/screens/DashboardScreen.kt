@@ -356,14 +356,14 @@ fun DashboardScreen(vm: AppViewModel) {
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                    Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFF10B981).copy(.1f)) {
+                    Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFF10B981).copy(.2f)) {
                         Column(modifier=Modifier.padding(12.dp)) {
                             Text("↑ INGRESOS", fontSize=9.sp, color=Color(0xFF10B981), fontWeight=FontWeight.Bold)
                             Spacer(Modifier.height(6.dp))
                             Text(formatMXN(todayInc), fontWeight=FontWeight.ExtraBold, fontSize=16.sp, color=Color(0xFF10B981))
                         }
                     }
-                    Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFFEF4444).copy(.1f)) {
+                    Surface(modifier=Modifier.weight(1f), shape=RoundedCornerShape(14.dp), color=Color(0xFFEF4444).copy(.2f)) {
                         Column(modifier=Modifier.padding(12.dp)) {
                             Text("↓ GASTOS", fontSize=9.sp, color=Color(0xFFEF4444), fontWeight=FontWeight.Bold)
                             Spacer(Modifier.height(6.dp))
