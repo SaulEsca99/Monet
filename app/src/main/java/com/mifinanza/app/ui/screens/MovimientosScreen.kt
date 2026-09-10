@@ -192,11 +192,12 @@ fun MovimientosScreen(vm: AppViewModel) {
                         Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
                             Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 val txColor = if (tx.type == "income") Color(0xFF10B981) else Color(0xFFEF4444)
-                                // Left accent bar
-                                Box(modifier = Modifier.width(3.dp).height(50.dp).clip(RoundedCornerShape(2.dp)).background(txColor))
+                                val catColor = if (tx.type == "income") Color(0xFF10B981) else categoryColor(tx.category)
+                                // Left accent bar — color de categoría
+                                Box(modifier = Modifier.width(3.dp).height(50.dp).clip(RoundedCornerShape(2.dp)).background(catColor))
                                 Spacer(Modifier.width(10.dp))
-                                // Icon
-                                Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(txColor.copy(.15f)), contentAlignment = Alignment.Center) {
+                                // Icon — color de categoría
+                                Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(catColor.copy(.15f)), contentAlignment = Alignment.Center) {
                                     Text(meta.emoji, fontSize = 22.sp)
                                 }
                                 Spacer(Modifier.width(12.dp))
@@ -205,7 +206,7 @@ fun MovimientosScreen(vm: AppViewModel) {
                                     Text(tx.description, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
                                     Spacer(Modifier.height(2.dp))
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(meta.name, fontSize = 11.sp, color = categoryColor(tx.category))
+                                        Text(meta.name, fontSize = 11.sp, color = catColor)
                                         Text(" · ", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         Text("${tx.date.substring(8)} ${monthLabel(tx.date.substring(0,7))}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         if (tx.time.isNotEmpty()) {
