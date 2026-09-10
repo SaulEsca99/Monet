@@ -201,9 +201,9 @@ private fun MsiPlanCard(plan: MsiPlan, accounts: List<Account>, onConfirm: () ->
                 Text(
                     when {
                         paidThisMonth -> "✓ Pagado · próximo cobro $nextLabel · en $nextDays días"
-                        days == 0 -> "🔔 ¡Hoy se cobra! · Día ${plan.paymentDay}"
-                        urgent -> "⚡ Cobro en $days días · Día ${plan.paymentDay}"
-                        else -> "Cobro día ${plan.paymentDay} · en $days días"
+                        days == 0 -> "🔔 ¡Hoy se cobra! · ${currentMonthLabel(plan.paymentDay)}"
+                        urgent -> "⚡ Cobro en $days días · ${currentMonthLabel(plan.paymentDay)}"
+                        else -> "Próximo cobro: ${currentMonthLabel(plan.paymentDay)} · en $days días"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = when { paidThisMonth -> GreenBrand; urgent -> AmberBrand; else -> MaterialTheme.colorScheme.onSurfaceVariant }

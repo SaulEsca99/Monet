@@ -81,44 +81,46 @@ fun MovimientosScreen(vm: AppViewModel) {
         Column(modifier = Modifier.fillMaxWidth().padding(pad).background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState())) {
 
             // Summary cards
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                // Income
-                Box(
-                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
-                        .background(GreenBrand.copy(.1f))
-                        .border(1.dp, GreenBrand.copy(.2f), RoundedCornerShape(18.dp))
-                        .padding(14.dp)
-                ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(28.dp).clip(CircleShape).background(GreenBrand.copy(.2f)), contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.TrendingUp, null, tint = GreenBrand, modifier = Modifier.size(16.dp))
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(18.dp), color = GreenBrand.copy(.12f), shadowElevation = 0.dp) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(26.dp).clip(CircleShape).background(GreenBrand.copy(.2f)), contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Default.TrendingUp, null, tint = GreenBrand, modifier = Modifier.size(14.dp))
+                                }
+                                Spacer(Modifier.width(6.dp))
+                                Text("INGRESOS", style = MaterialTheme.typography.labelSmall, color = GreenBrand)
                             }
-                            Spacer(Modifier.width(6.dp))
-                            Text("INGRESOS", style = MaterialTheme.typography.labelSmall, color = GreenBrand.copy(.7f))
+                            Spacer(Modifier.height(6.dp))
+                            Text(formatMXN(inc), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = GreenBrand)
                         }
-                        Spacer(Modifier.height(6.dp))
-                        Text(formatMXN(inc), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = GreenBrand)
+                    }
+                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(18.dp), color = RedBrand.copy(.12f), shadowElevation = 0.dp) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(26.dp).clip(CircleShape).background(RedBrand.copy(.2f)), contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Default.TrendingDown, null, tint = RedBrand, modifier = Modifier.size(14.dp))
+                                }
+                                Spacer(Modifier.width(6.dp))
+                                Text("GASTOS", style = MaterialTheme.typography.labelSmall, color = RedBrand)
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(formatMXN(exp), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = RedBrand)
+                        }
                     }
                 }
-                // Expense
-                Box(
-                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
-                        .background(RedBrand.copy(.1f))
-                        .border(1.dp, RedBrand.copy(.2f), RoundedCornerShape(18.dp))
-                        .padding(14.dp)
-                ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(28.dp).clip(CircleShape).background(RedBrand.copy(.2f)), contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.TrendingDown, null, tint = RedBrand, modifier = Modifier.size(16.dp))
-                            }
-                            Spacer(Modifier.width(6.dp))
-                            Text("GASTOS", style = MaterialTheme.typography.labelSmall, color = RedBrand.copy(.7f))
-                        }
-                        Spacer(Modifier.height(6.dp))
-                        Text(formatMXN(exp), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = RedBrand)
+                // Progress bar: % of income spent
+                if (inc > 0) {
+                    Spacer(Modifier.height(8.dp))
+                    val pct = (exp / inc).toFloat().coerceIn(0f, 1f)
+                    val pctColor = if (pct > 0.8f) RedBrand else if (pct > 0.5f) AmberBrand else GreenBrand
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("${(pct * 100).toInt()}% del ingreso gastado", fontSize = 11.sp, color = pctColor)
+                        Text(formatMXN(inc - exp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (inc > exp) GreenBrand else RedBrand)
                     }
+                    Spacer(Modifier.height(4.dp))
+                    LinearProgressIndicator(progress = { pct }, modifier = Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp)), color = pctColor, trackColor = MaterialTheme.colorScheme.surfaceVariant)
                 }
             }
 

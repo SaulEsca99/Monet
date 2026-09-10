@@ -161,11 +161,14 @@ fun DashboardScreen(vm: AppViewModel) {
         for (tx in sorted.reversed()) { b -= if (tx.type=="income") tx.amount else -tx.amount; v.add(0,b) }
         v.takeLast(8)
     }
+    // Tonos de rojo para gastos en el donut (más oscuro = más gasto)
+    val donutRedPalette = listOf(Color(0xFFEF4444), Color(0xFFDC2626), Color(0xFFF97316), Color(0xFFEF4444).copy(.7f), Color(0xFFEF4444).copy(.5f))
     val donutSegs = remember(mTxs, exp) {
         if (exp==0.0) emptyList()
         else mTxs.filter { it.type=="expense" }.groupBy { it.category }
-            .map { (cat,txs) -> val amt=txs.sumOf{it.amount}; DonutSeg(getCategoryMeta(cat).name, getCategoryMeta(cat).emoji, amt, (amt/exp).toFloat(), categoryColor(cat)) }
+            .map { (cat,txs) -> val amt=txs.sumOf{it.amount}; DonutSeg(getCategoryMeta(cat).name, getCategoryMeta(cat).emoji, amt, (amt/exp).toFloat(), Color(0xFFEF4444)) }
             .sortedByDescending { it.pct }.take(5)
+            .mapIndexed { i, s -> s.copy(color = donutRedPalette.getOrElse(i) { Color(0xFFEF4444) }) }
     }
     val last6 = remember(state.transactions) {
         (0..5).map { ago ->
