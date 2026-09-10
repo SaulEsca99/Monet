@@ -341,9 +341,10 @@ fun DashboardScreen(vm: AppViewModel) {
                     LinearProgressIndicator(progress={abs(savingRate).coerceIn(0,100)/100f}, modifier=Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)), color=if(savingRate>=0) Color(0xFF10B981) else Color(0xFFEF4444), trackColor=MaterialTheme.colorScheme.surfaceVariant)
                 }
             }
-        }
+        } // end stats item
 
-        // ── HOY ──────────────────────────────────────────────────────────────
+        // ── HOY — item separado ───────────────────────────────────────────────
+        item {
         Column(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
             Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
                 Text("HOY", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -376,8 +377,10 @@ fun DashboardScreen(vm: AppViewModel) {
                 }
             }
         }
+        } // end HOY item
 
-        // ── ESTA SEMANA ───────────────────────────────────────────────────────
+        // ── ESTA SEMANA — item separado ───────────────────────────────────────
+        item {
         Column(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
             Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
                 Text("ESTA SEMANA", style=MaterialTheme.typography.labelSmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -426,7 +429,9 @@ fun DashboardScreen(vm: AppViewModel) {
                 }
             }
         }
+        } // end ESTA SEMANA item
 
+        item {
         // ── 6-MONTH TREND ────────────────────────────────────────────────────
         Surface(modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=4.dp), shape=RoundedCornerShape(20.dp), color=MaterialTheme.colorScheme.surface, shadowElevation=1.dp) {
             Column(modifier=Modifier.padding(16.dp)) {
@@ -574,7 +579,7 @@ fun DashboardScreen(vm: AppViewModel) {
         }
 
         if (state.accounts.isEmpty()) EmptyState("🚀","¡Bienvenido a Monet!","Toca la 👜 para crear tu primera cuenta")
-        } // end item
+        } // end last item
     }
 }
 
